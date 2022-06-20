@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserCredentials {
+  user_id     Int      @id
+  user        User     @relation(fields: [user_id], references: [id])
+  password    String
+  created_at  DateTime @default(now())
+  modified_at DateTime @default(now())
+  status  STATUS? @default(ACTIVE)
+
+  @@unique([user_id])
+}
+
+
+model UserRelations {
+  id               Int      @id @default(autoincrement())
+  follower_user_id Int
+  followed_user_id Int
+  created_at       DateTime @default(now())
+  modified_at      DateTime @default(now())
+  follower         User     @relation("follower", fields: [follower_user_id], references: [id])
+  followed         User     @relation("followed", fields: [followed_user_id], references: [id])
+
+  @@unique([followed_user_id, follower_user_id])
+  status  STATUS? @default(ACTIVE)
+}
+
+model User {
+  id              Int               @id @default(autoincrement())
+  username        String
+  modified_at      DateTime @default(now())
+  created_at       DateTime @default(now())
+  posts           Post[]
+  UserCredentials UserCredentials[]
+  UserRelations   UserRelations[]   @relation("follower")
+  UserRelations_  UserRelations[]   @relation("followed")
+  status  STATUS? @default(ACTIVE)
+}
+
+
+enum STATUS {
+  ACTIVE
+  INACTIVE
+  DELETED
+   PUBLISHED
+  UNDER_REVIEW
+  CANCELLED
+}
+
+
+model Post {
+  id        Int             @id @default(autoincrement())
+  title     String
+  content   String?
+  created_at       DateTime @default(now())
+  modified_at      DateTime @default(now())
+  author    User?           @relation(fields: [authorId], references: [id])
+  status  STATUS? @default(ACTIVE)
+  authorId  Int?
+}
